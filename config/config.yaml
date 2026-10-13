@@ -1,0 +1,26 @@
+# MissionInterpreter configuration
+model_path: models/qwen2.5-7b-instruct-q4_k_m.gguf
+
+# llama.cpp parameters
+n_ctx: 2048
+n_gpu_layers: 99   # 0 = CPU only
+max_tokens: 512
+
+# Optional: description of the mission domain
+context: ""
+
+# GBNF grammar that defines the output format.
+# The "|" block keeps the text literal: no slashes or quotes need to be escaped.
+grammar: |
+  root   ::= "{\"mission_decomposition\": [" task (", " task){0,15} "]}"
+  task   ::= "{\"action\": " string ", \"target\": " string "}"
+  string ::= "\"" char{1,100} "\""
+  char   ::= [^"\\\x00-\x1f] | "\\" ["\\/bfnrt]
+
+# Few-shot examples. The output must match the grammar format exactly
+# (same spacing and punctuation, all on one line).
+examples:
+  - command: go to the warehouse, pick up box 4 and place it on shelf b-2
+    output: '{"mission_decomposition": [{"action": "navigate", "target": "warehouse"}, {"action": "pick up", "target": "box 4"}, {"action": "place", "target": "shelf b-2"}]}'
+  - command: turn off pump 3 after checking the pressure of line l-1
+    output: '{"mission_decomposition": [{"action": "check", "target": "pressure line l-1"}, {"action": "turn off", "target": "pump 3"}]}'
